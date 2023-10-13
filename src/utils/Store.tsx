@@ -1,15 +1,12 @@
 "use client";
 
 import React, { useContext, useEffect, useState, createContext } from "react";
-import * as anchor from "@coral-xyz/anchor";
 import { useAnchorWallet, useConnection } from "@solana/wallet-adapter-react";
-import { Keypair, PublicKey, Transaction } from "@solana/web3.js";
-import { CustomProgram, IDL } from "./idl/customProgram";
+import { Keypair, Transaction } from "@solana/web3.js";
+import { ProgramClient, initProgramClient } from "./program/myProgramClass";
 
 interface StoreConfig {
-  programClient: anchor.Program<CustomProgram> | null;
-  getCustomPda: any;
-  getCustomPdaWithFilter: any;
+  programClient: ProgramClient | null;
   signAndSendTransaction: (
     transaction: Transaction,
     partialSign?: boolean,
@@ -19,14 +16,13 @@ interface StoreConfig {
 
 const StoreContext = createContext<StoreConfig>({
   programClient: null,
-  getCustomPda: async () => {},
-  getCustomPdaWithFilter: async () => {},
   signAndSendTransaction: async () => "",
 });
 
 export function StoreProvider({ children }: { children: any }) {
-  const [programClient, setProgramClient] =
-    useState<anchor.Program<CustomProgram> | null>(null);
+  const [programClient, setProgramClient] = useState<ProgramClient | null>(
+    null
+  );
 
   const wallet = useAnchorWallet();
   const { connection } = useConnection();
@@ -34,35 +30,16 @@ export function StoreProvider({ children }: { children: any }) {
   useEffect(() => {
     (async () => {
       try {
-        if (!IDL) {
-          throw "IDL File Required";
-        }
         if (!process.env.NEXT_PUBLIC_PROGRAM_ID) {
           throw "ProgramID Required";
         }
 
         if (wallet) {
-          const provider = new anchor.AnchorProvider(
-            connection,
-            wallet,
-            anchor.AnchorProvider.defaultOptions()
-          );
-          anchor.setProvider(provider);
-          const customProgram: anchor.Program<CustomProgram> =
-            new anchor.Program<CustomProgram>(
-              IDL as CustomProgram,
-              process.env.PROGRAM_ID!,
-              provider
-            );
-          setProgramClient(customProgram);
+          const program = await initProgramClient(wallet);
+          setProgramClient(program);
         } else {
-          const customProgram: anchor.Program<CustomProgram> =
-            new anchor.Program<CustomProgram>(
-              IDL as CustomProgram,
-              process.env.NEXT_PUBLIC_PROGRAM_ID!,
-              { connection }
-            );
-          setProgramClient(customProgram);
+          const program = await initProgramClient();
+          setProgramClient(program);
         }
       } catch (err) {
         console.log(err);
@@ -90,43 +67,10 @@ export function StoreProvider({ children }: { children: any }) {
     }
   };
 
-  const getCustomPda = async (
-    userPubkey: PublicKey,
-    program = programClient!
-  ) => {
-    const [userInfo, _userInfoBump] = PublicKey.findProgramAddressSync(
-      [Buffer.from("user"), userPubkey.toBuffer()],
-      program.programId
-    );
-    try {
-      const userInfoData = await program.account.userInfo.fetch(userInfo);
-      return userInfoData;
-    } catch (error) {
-      return null;
-    }
-  };
-
-  const getCustomPdaWithFilter = async (
-    userPubkey: PublicKey,
-    program = programClient
-  ) => {
-    const filter = [
-      {
-        memcmp: {
-          offset: 8, //prepend for anchor's discriminator & tokenAccount
-          bytes: userPubkey.toBase58(),
-        },
-      },
-    ];
-    return await program!.account.userStakeInfo.all(filter);
-  };
-
   return (
     <StoreContext.Provider
       value={{
         programClient,
-        getCustomPda,
-        getCustomPdaWithFilter,
         signAndSendTransaction,
       }}
     >
@@ -139,8 +83,7 @@ export const useStoreContext = () => {
   const context = useContext(StoreContext);
 
   return {
-    programClient: context.programClient!,
-    getCustomPda: context.getCustomPda,
+    programClient: context.programClient,
     signAndSendTransaction: context.signAndSendTransaction,
   };
 };
