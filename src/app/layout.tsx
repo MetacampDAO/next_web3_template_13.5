@@ -1,4 +1,3 @@
-"use client";
 import { StoreProvider } from "@/utils/Store";
 import "./globals.css";
 import { Inter } from "next/font/google";
