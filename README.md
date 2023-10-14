@@ -21,8 +21,13 @@ React Store uses useContext to allow all children components to access values in
 `signAndSendTransaction` function which take a transaction, set recentBlockhash and feePayers, then send the transaction.
 get.
 
-`getCustomPda` is a simple fetch request
+`programClient` accessible with `const { programClient } = useStoreContext();`
+
+### Utils Breakdown
+
+In `src/utils/pdaFetch.ts`, you will find 3 examples of how you can fetch PDAs from your custom program.
+
+1. getPdaAddressExample:
+   `getCustomPda` is a simple fetch request
 
 `getCustomPdaWithFilter` includes a filter
-
-`programClient` accessible with `const { programClient } = useStoreContext();`
