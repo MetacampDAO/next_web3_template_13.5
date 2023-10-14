@@ -14,20 +14,18 @@
 ## Store Path
 
 `src/utils/Store.tsx`
-React Store uses useContext to allow all children components to access values in Store.
+React Store uses useContext to allow all children components to access values in the Store.
 
 ### Store Breakdown
 
-`signAndSendTransaction` function which take a transaction, set recentBlockhash and feePayers, then send the transaction.
-get.
+`signAndSendTransaction` function which takes a transaction, sets recentBlockhash and feePayers and then sends the transaction.
 
 `programClient` accessible with `const { programClient } = useStoreContext();`
 
 ### Utils Breakdown
 
-In `src/utils/pdaFetch.ts`, you will find 3 examples of how you can fetch PDAs from your custom program.
+In `src/utils/pdaFetch.ts`, you will find 3 examples of fetching PDAs from your custom program.
 
-1. getPdaAddressExample:
-   `getCustomPda` is a simple fetch request
-
-`getCustomPdaWithFilter` includes a filter
+1. `getPdaAddressExample` returns the address of the PDA
+2. `getPdaDataExmaple` returns the single PDA data
+3. `getAllPdaByAuthority` returns an array of PDAs data that matches a filter
